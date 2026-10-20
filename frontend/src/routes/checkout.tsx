@@ -1,8 +1,225 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { money, products } from "@/lib/catalog";
 import { useCommerce } from "@/components/storefront";
-export const Route=createFileRoute("/checkout")({head:()=>({meta:[{title:"Checkout — CIAO D MILANO"},{name:"description",content:"Secure checkout for your CIAO D MILANO order."},{property:"og:title",content:"Checkout — CIAO D MILANO"},{property:"og:description",content:"Complete your CIAO D MILANO order."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}),component:Checkout});
-function Checkout(){const {cart}=useCommerce(); const navigate=useNavigate(); const lines=products.filter((p)=>cart[p.id]); const total=lines.reduce((s,p)=>s+p.price*(cart[p.id]??0),0); return <form onSubmit={(e)=>{e.preventDefault();navigate({to:"/payment"})}} className="mx-auto grid max-w-[1200px] gap-12 px-6 py-16 lg:grid-cols-[minmax(0,1fr)_380px] lg:px-10"><div><h1 className="font-serif text-5xl">Checkout</h1><CheckoutSection n="01" title="Contact Information"><Input required type="email" placeholder="Email address"/></CheckoutSection><CheckoutSection n="02" title="Shipping Address"><div className="grid gap-4 sm:grid-cols-2"><Input required placeholder="First name"/><Input required placeholder="Last name"/><Input required placeholder="Address" className="sm:col-span-2"/><Input required placeholder="City"/><Input required placeholder="Postal code"/><Input required placeholder="Country" className="sm:col-span-2"/></div></CheckoutSection><CheckoutSection n="03" title="Delivery Method"><label className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-4 border border-ink p-4 text-sm"><input type="radio" defaultChecked/> <span>Express Delivery<br/><small className="text-stone">2–4 business days</small></span><span>Complimentary</span></label></CheckoutSection></div><aside className="bg-ivory p-6 lg:sticky lg:top-24 lg:self-start"><h2 className="font-serif text-2xl">Order Summary</h2><div className="mt-6 space-y-5">{lines.map((p)=><div key={p.id} className="grid grid-cols-[64px_minmax(0,1fr)_auto] gap-3"><img src={p.image} alt="" width={128} height={160} className="aspect-[3/4] object-cover"/><div><p className="text-sm">{p.name}</p><p className="mt-1 text-xs text-stone">Qty {cart[p.id]}</p></div><span className="text-sm">{money(p.price*(cart[p.id]??0))}</span></div>)}</div><div className="mt-6 flex justify-between border-t border-border pt-5"><span>Total</span><strong>{money(total)}</strong></div><Button type="submit" size="lg" className="mt-6 w-full" disabled={!lines.length}>Place Order</Button></aside></form>}
-function CheckoutSection({n,title,children}:{n:string;title:string;children:React.ReactNode}){return <section className="mt-12 border-t border-border pt-6"><p className="text-[9px] uppercase tracking-[.18em] text-stone">{n}</p><h2 className="mb-6 mt-2 font-serif text-2xl">{title}</h2>{children}</section>}
+import { money } from "@/lib/catalog";
+import { useProductsByIds } from "@/lib/catalog-api";
+
+export const Route = createFileRoute("/checkout")({
+  head: () => ({
+    meta: [
+      { title: "Checkout — CIAO D MILANO" },
+      { name: "description", content: "Secure checkout for your CIAO D MILANO order." },
+      { property: "og:title", content: "Checkout — CIAO D MILANO" },
+      { property: "og:description", content: "Complete your CIAO D MILANO order." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Checkout,
+});
+
+function Checkout() {
+  const { account, cart, checkoutItems, checkoutDetails, requireSignIn, setCheckoutDetails } =
+    useCommerce();
+  const navigate = useNavigate();
+  const requestedSignIn = useRef(false);
+  const itemsToCheckout = checkoutItems ?? cart;
+  const { data: lines, isLoading, error } = useProductsByIds(
+    Object.keys(itemsToCheckout).filter((id) => (itemsToCheckout[id] ?? 0) > 0),
+  );
+  const total = lines.reduce(
+    (sum, product) => sum + product.price * (itemsToCheckout[product.id] ?? 0),
+    0,
+  );
+
+  useEffect(() => {
+    if (account || requestedSignIn.current) return;
+    requestedSignIn.current = true;
+    requireSignIn(() => void navigate({ to: "/checkout" }));
+  }, [account, navigate, requireSignIn]);
+
+  if (!account) {
+    return (
+      <section
+        role="status"
+        className="flex min-h-[60vh] items-center justify-center px-6 text-center"
+      >
+        <p className="text-sm text-stone">Please sign in to continue to checkout.</p>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section role="alert" className="flex min-h-[60vh] items-center justify-center px-6 text-center">
+        <p className="text-sm text-stone">
+          {error instanceof Error ? error.message : "Unable to load checkout products."}
+        </p>
+      </section>
+    );
+  }
+  if (isLoading) {
+    return (
+      <section role="status" className="flex min-h-[60vh] items-center justify-center px-6 text-center">
+        <p className="text-sm text-stone">Loading checkout products…</p>
+      </section>
+    );
+  }
+
+  function continueToPayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    setCheckoutDetails({
+      phone: String(formData.get("phone") ?? "").trim(),
+      firstName: String(formData.get("firstName") ?? "").trim(),
+      lastName: String(formData.get("lastName") ?? "").trim(),
+      address: String(formData.get("address") ?? "").trim(),
+      city: String(formData.get("city") ?? "").trim(),
+      postalCode: String(formData.get("postalCode") ?? "").trim(),
+      country: String(formData.get("country") ?? "").trim(),
+    });
+    void navigate({ to: "/payment" });
+  }
+
+  return (
+    <form
+      onSubmit={continueToPayment}
+      className="mx-auto grid max-w-[1200px] gap-12 px-6 py-16 lg:grid-cols-[minmax(0,1fr)_380px] lg:px-10"
+    >
+      <div>
+        <h1 className="font-serif text-5xl">Checkout</h1>
+        <CheckoutSection n="01" title="Contact Information">
+          <Input
+            required
+            name="email"
+            type="email"
+            value={account.email}
+            readOnly
+            placeholder="Email address"
+          />
+          <Input
+            required
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            defaultValue={checkoutDetails?.phone}
+            placeholder="Phone number"
+            className="mt-4"
+          />
+        </CheckoutSection>
+        <CheckoutSection n="02" title="Shipping Address">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              required
+              name="firstName"
+              autoComplete="given-name"
+              defaultValue={checkoutDetails?.firstName ?? account.firstName}
+              placeholder="First name"
+            />
+            <Input
+              required
+              name="lastName"
+              autoComplete="family-name"
+              defaultValue={checkoutDetails?.lastName ?? account.lastName}
+              placeholder="Last name"
+            />
+            <Input
+              required
+              name="address"
+              autoComplete="street-address"
+              defaultValue={checkoutDetails?.address}
+              placeholder="Address"
+              className="sm:col-span-2"
+            />
+            <Input
+              required
+              name="city"
+              autoComplete="address-level2"
+              defaultValue={checkoutDetails?.city}
+              placeholder="City"
+            />
+            <Input
+              required
+              name="postalCode"
+              autoComplete="postal-code"
+              defaultValue={checkoutDetails?.postalCode}
+              placeholder="Postal code"
+            />
+            <Input
+              required
+              name="country"
+              autoComplete="country-name"
+              defaultValue={checkoutDetails?.country}
+              placeholder="Country"
+              className="sm:col-span-2"
+            />
+          </div>
+        </CheckoutSection>
+        <CheckoutSection n="03" title="Delivery Method">
+          <label className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-4 border border-ink p-4 text-sm">
+            <input type="radio" defaultChecked />
+            <span>
+              Express Delivery
+              <br />
+              <small className="text-stone">2–4 business days</small>
+            </span>
+            <span>Complimentary</span>
+          </label>
+        </CheckoutSection>
+      </div>
+      <aside className="bg-ivory p-6 lg:sticky lg:top-24 lg:self-start">
+        <h2 className="font-serif text-2xl">Order Summary</h2>
+        <div className="mt-6 space-y-5">
+          {lines.map((product) => (
+            <div key={product.id} className="grid grid-cols-[64px_minmax(0,1fr)_auto] gap-3">
+              <img
+                src={product.image}
+                alt=""
+                width={128}
+                height={160}
+                className="aspect-[3/4] object-cover"
+              />
+              <div>
+                <p className="text-sm">{product.name}</p>
+                <p className="mt-1 text-xs text-stone">Qty {itemsToCheckout[product.id]}</p>
+              </div>
+              <span className="text-sm">
+                {money(product.price * (itemsToCheckout[product.id] ?? 0))}
+              </span>
+            </div>
+          ))}
+          {lines.length === 0 && (
+            <p className="text-sm text-stone">Your order is ready for its first piece.</p>
+          )}
+        </div>
+        <div className="mt-6 flex justify-between border-t border-border pt-5">
+          <span>Total</span>
+          <strong>{money(total)}</strong>
+        </div>
+        <Button type="submit" size="lg" className="mt-6 w-full" disabled={!lines.length}>
+          Place Order
+        </Button>
+      </aside>
+    </form>
+  );
+}
+
+function CheckoutSection({
+  n,
+  title,
+  children,
+}: {
+  n: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="mt-12 border-t border-border pt-6">
+      <p className="text-[9px] uppercase tracking-[.18em] text-stone">{n}</p>
+      <h2 className="mb-6 mt-2 font-serif text-2xl">{title}</h2>
+      {children}
+    </section>
+  );
+}

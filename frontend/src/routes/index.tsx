@@ -1,20 +1,63 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { imagery, products } from "@/lib/catalog";
-import { ProductCard } from "@/components/storefront";
+import { EditorialSlideshow, ProductGrid, type EditorialSlide } from "@/components/storefront";
+import { mixCatalogProducts, useCatalogItems } from "@/lib/catalog-api";
+import { imagery } from "@/lib/catalog";
 import dubaiDeliveryBanner from "@/assets/dubai-delivery-banner.jpg";
 import signatureTeeModel from "@/assets/signature-tee-model.jpg";
 import signatureTeeStillLife from "@/assets/signature-tee-still-life.jpg";
+import homeSlide1 from "@/assets/home_slideshow1.png";
+import homeSlide2 from "@/assets/home_slideshow2.png";
+import homeSlide3 from "@/assets/home_slideshow3.png";
+import homeSlide4 from "@/assets/home_slideshow4.png";
+
+const slides: EditorialSlide[] = [
+  {
+    eyebrow: "Autumn — Winter 2026",
+    title: "The Quiet Luxury of Milan",
+    copy: "Discover Italian tailoring, timeless silhouettes and considered details.",
+    image: homeSlide1,
+    alt: "CIAO D MILANO autumn winter campaign in Milan",
+    linkTo: "/collections",
+    linkLabel: "Shop Collection",
+  },
+  {
+    eyebrow: "The House",
+    title: "A Milanese Point of View",
+    copy: "A study in restraint, shaped by enduring materials and impeccable craft.",
+    image: homeSlide2,
+    alt: "CIAO D MILANO campaign from the house collection",
+  },
+  {
+    eyebrow: "Made to Endure",
+    title: "Considered by Design",
+    copy: "Modern pieces defined by precision, movement and quiet confidence.",
+    image: homeSlide3,
+    alt: "Considered Italian design from CIAO D MILANO",
+  },
+  {
+    eyebrow: "The Season's Edit",
+    title: "The Art of Dressing",
+    copy: "Discover the latest expressions from the CIAO D MILANO atelier.",
+    image: homeSlide4,
+    alt: "Seasonal edit from the CIAO D MILANO atelier",
+  },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "CIAO D MILANO — The Quiet Luxury of Milan" }, { name: "description", content: "Discover CIAO D MILANO's latest Italian fashion collection, tailored with restraint and precision." }, { property: "og:title", content: "CIAO D MILANO — The Quiet Luxury of Milan" }, { property: "og:description", content: "Discover Italian tailoring, timeless womenswear and modern menswear." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: HomePage,
 });
 
-function HomePage() { return <>
-  <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-ink-deep"><img src={imagery.hero} alt="CIAO D MILANO autumn winter campaign in Milan" width={1536} height={1024} className="absolute inset-0 h-full w-full object-cover object-[68%_center]" /><div className="absolute inset-0 bg-gradient-to-t from-ink-deep/80 via-ink-deep/5 to-transparent" /><div className="relative mx-auto flex min-h-[calc(100svh-4rem)] max-w-[1440px] items-end px-6 pb-14 lg:px-10 lg:pb-16"><div className="max-w-3xl text-paper"><p className="editorial-rise mb-5 text-[10px] uppercase tracking-[0.22em] text-sand">Autumn — Winter 2026</p><h1 className="editorial-rise font-serif text-5xl leading-[.94] sm:text-7xl lg:text-8xl" style={{ animationDelay: "120ms" }}>The Quiet Luxury<br />of Milan</h1><Button asChild size="lg" variant="outline" className="editorial-rise mt-8 border-paper bg-paper text-ink hover:bg-paper/85" style={{ animationDelay: "240ms" }}><Link to="/collections">Shop Collection <ArrowRight /></Link></Button></div></div></section>
-  <section className="mx-auto max-w-[1440px] px-4 py-20 sm:px-6 lg:px-10 lg:py-28"><div className="mb-10 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4"><div><p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-stone">New Arrivals</p><h2 className="font-serif text-4xl sm:text-5xl">This Season's Edit</h2></div><Link to="/new-arrivals" className="hidden text-[10px] uppercase tracking-[0.16em] sm:block">View All →</Link></div><div className="grid grid-cols-2 gap-x-3 gap-y-10 md:grid-cols-4 md:gap-6">{products.slice(0,4).map((p) => <ProductCard key={p.id} product={p} />)}</div></section>
+function HomePage() {
+  const men = useCatalogItems("men_items", 2);
+  const women = useCatalogItems("women_items", 2);
+  const seasonEdit = mixCatalogProducts(men.data ?? [], women.data ?? []);
+  const seasonError = men.error ?? women.error;
+  return <>
+  <EditorialSlideshow label="Home highlights" slides={slides} align="left" />
+  <section className="mx-auto max-w-[1440px] px-4 py-20 sm:px-6 lg:px-10 lg:py-28"><div className="mb-10 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4"><div><p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-stone">New Arrivals</p><h2 className="font-serif text-4xl sm:text-5xl">This Season's Edit</h2></div><Link to="/new-arrivals" className="hidden text-[10px] uppercase tracking-[0.16em] sm:block">View All →</Link></div><ProductGrid items={seasonEdit} loading={men.isLoading || women.isLoading} error={seasonError instanceof Error ? seasonError.message : undefined} /></section>
   <section className="mx-auto grid max-w-[1440px] gap-6 px-4 pb-24 sm:px-6 md:grid-cols-12 lg:px-10"><Campaign to="/women" image={imagery.women} alt="Women's collection in a Milan atelier" eyebrow="Women" title="The Atelier Edit" className="md:col-span-7" /><div className="flex flex-col justify-between md:col-span-5"><div className="py-8 md:py-0"><p className="text-[10px] uppercase tracking-[0.2em] text-stone">Men</p><h2 className="mt-3 max-w-[12ch] font-serif text-4xl sm:text-5xl">Tailored for the Modern Man</h2><p className="mt-4 max-w-[40ch] text-sm leading-7 text-stone">Cut in Milan, finished by hand. A wardrobe built on restraint and precision.</p></div><Campaign to="/men" image={imagery.men} alt="Men's tailoring collection" title="Explore Menswear" compact /></div></section>
   <SignatureTee />
   <section className="relative min-h-[68vh] overflow-hidden bg-ink-deep"><img src={imagery.stillLife} alt="Italian craftsmanship and accessories" loading="lazy" width={1536} height={1024} className="absolute inset-0 h-full w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-r from-ink-deep/80 via-ink-deep/25 to-transparent" /><div className="relative mx-auto flex min-h-[68vh] max-w-[1440px] items-center px-6 lg:px-10"><div className="max-w-xl text-paper"><p className="mb-4 text-[10px] uppercase tracking-[0.22em] text-sand">The Journal</p><h2 className="font-serif text-5xl leading-none sm:text-6xl">Crafted in the Quiet</h2><Button asChild variant="link" className="mt-6 px-0 text-paper"><Link to="/about">Read the Story <ArrowRight /></Link></Button></div></div></section>
