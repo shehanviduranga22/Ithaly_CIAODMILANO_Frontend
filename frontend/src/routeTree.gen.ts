@@ -19,6 +19,7 @@ import { Route as CollectionsRouteImport } from './routes/collections'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as MenRouteImport } from './routes/men'
 import { Route as NewArrivalsRouteImport } from './routes/new-arrivals'
+import { Route as OrderConfirmationRouteImport } from './routes/order-confirmation'
 import { Route as PaymentRouteImport } from './routes/payment'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ShippingDeliveryRouteImport } from './routes/shipping-delivery'
@@ -76,6 +77,11 @@ const NewArrivalsRoute = NewArrivalsRouteImport.update({
   path: '/new-arrivals',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrderConfirmationRoute = OrderConfirmationRouteImport.update({
+  id: '/order-confirmation',
+  path: '/order-confirmation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PaymentRoute = PaymentRouteImport.update({
   id: '/payment',
   path: '/payment',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/men': typeof MenRoute
   '/new-arrivals': typeof NewArrivalsRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
   '/payment': typeof PaymentRoute
   '/search': typeof SearchRoute
   '/shipping-delivery': typeof ShippingDeliveryRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/men': typeof MenRoute
   '/new-arrivals': typeof NewArrivalsRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
   '/payment': typeof PaymentRoute
   '/search': typeof SearchRoute
   '/shipping-delivery': typeof ShippingDeliveryRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/men': typeof MenRoute
   '/new-arrivals': typeof NewArrivalsRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
   '/payment': typeof PaymentRoute
   '/search': typeof SearchRoute
   '/shipping-delivery': typeof ShippingDeliveryRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/men'
     | '/new-arrivals'
+    | '/order-confirmation'
     | '/payment'
     | '/search'
     | '/shipping-delivery'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/men'
     | '/new-arrivals'
+    | '/order-confirmation'
     | '/payment'
     | '/search'
     | '/shipping-delivery'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/men'
     | '/new-arrivals'
+    | '/order-confirmation'
     | '/payment'
     | '/search'
     | '/shipping-delivery'
@@ -230,6 +242,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   MenRoute: typeof MenRoute
   NewArrivalsRoute: typeof NewArrivalsRoute
+  OrderConfirmationRoute: typeof OrderConfirmationRoute
   PaymentRoute: typeof PaymentRoute
   SearchRoute: typeof SearchRoute
   ShippingDeliveryRoute: typeof ShippingDeliveryRoute
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewArrivalsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/order-confirmation': {
+      id: '/order-confirmation'
+      path: '/order-confirmation'
+      fullPath: '/order-confirmation'
+      preLoaderRoute: typeof OrderConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/payment': {
       id: '/payment'
       path: '/payment'
@@ -366,6 +386,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   MenRoute: MenRoute,
   NewArrivalsRoute: NewArrivalsRoute,
+  OrderConfirmationRoute: OrderConfirmationRoute,
   PaymentRoute: PaymentRoute,
   SearchRoute: SearchRoute,
   ShippingDeliveryRoute: ShippingDeliveryRoute,

@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCommerce, type ClientAccount, type ClientOrder } from "@/components/storefront";
 import atelierImage from "@/assets/ciao-women.jpg";
+import { imagery } from "@/lib/catalog";
+import { useProductsByIds } from "@/lib/catalog-api";
 
 type AccountApiResponse = {
   message?: string;
@@ -75,6 +77,17 @@ function AccountDashboard({
   orders: ClientOrder[];
   onSignOut: () => void;
 }) {
+  const productIds = [
+    ...new Set(
+      orders.flatMap((order) =>
+        order.items
+          .map((item) => item.productId)
+          .filter((productId): productId is string => typeof productId === "string"),
+      ),
+    ),
+  ];
+  const { data: products } = useProductsByIds(productIds);
+  const productImages = new Map(products.map((product) => [product.id, product.image]));
   const piecesCollected = orders.reduce(
     (total, order) =>
       total +
@@ -159,7 +172,7 @@ function AccountDashboard({
               aria-hidden="true"
               className="pointer-events-none absolute -left-3 top-[4.35rem] size-36 rounded-full border border-burgundy/10"
             />
-            <div className="relative border border-[#d9ccbb] bg-[#f8f3eb] p-4 shadow-[0_18px_55px_-35px_rgba(40,28,20,0.45)] sm:p-5">
+            <div className="relative border border-[#d9ccbb] bg-paper p-4 shadow-[0_18px_55px_-35px_rgba(40,28,20,0.45)] sm:p-5">
               <div className="relative min-h-44 overflow-hidden bg-ink-deep px-6 py-6 text-paper sm:px-8 sm:py-7">
                 <img
                   src={atelierImage}
@@ -211,7 +224,7 @@ function AccountDashboard({
                 </h2>
 
                 <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <div className="min-w-0 border border-border/80 bg-ivory/70 p-4 transition-colors hover:border-burgundy/40">
+                  <div className="min-w-0 border border-border/80 bg-paper p-4 transition-colors hover:border-burgundy/40">
                     <dt className="flex items-center gap-2 text-[9px] uppercase tracking-[0.15em] text-stone">
                       <UserRound className="size-3.5 text-burgundy" aria-hidden="true" />
                       Full name
@@ -220,14 +233,14 @@ function AccountDashboard({
                       {[account.firstName, account.lastName].filter(Boolean).join(" ") || "—"}
                     </dd>
                   </div>
-                  <div className="min-w-0 border border-border/80 bg-ivory/70 p-4 transition-colors hover:border-burgundy/40 sm:col-span-2">
+                  <div className="min-w-0 border border-border/80 bg-paper p-4 transition-colors hover:border-burgundy/40 sm:col-span-2">
                     <dt className="flex items-center gap-2 text-[9px] uppercase tracking-[0.15em] text-stone">
                       <Check className="size-3.5 text-burgundy" aria-hidden="true" />
                       Email address
                     </dt>
                     <dd className="mt-2 break-all text-sm text-ink">{account.email}</dd>
                   </div>
-                  <div className="min-w-0 border border-border/80 bg-ivory/70 p-4 transition-colors hover:border-burgundy/40">
+                  <div className="min-w-0 border border-border/80 bg-paper p-4 transition-colors hover:border-burgundy/40">
                     <dt className="flex items-center gap-2 text-[9px] uppercase tracking-[0.15em] text-stone">
                       <Sparkles className="size-3.5 text-burgundy" aria-hidden="true" />
                       Client since
@@ -314,9 +327,20 @@ function AccountDashboard({
                           {order.items.map((item, index) => (
                             <li
                               key={`${order.id}-${item.name}-${index}`}
-                              className="flex justify-between gap-4 text-xs text-stone"
+                              className="flex items-center gap-3 text-xs text-stone"
                             >
-                              <span>{item.name}</span>
+                              <img
+                                src={
+                                  item.image ??
+                                  productImages.get(item.productId ?? "") ??
+                                  imagery.stillLife
+                                }
+                                alt={item.name}
+                                width={56}
+                                height={72}
+                                className="size-14 shrink-0 object-cover"
+                              />
+                              <span className="min-w-0 flex-1">{item.name}</span>
                               {item.quantity !== null && <span>Qty {item.quantity}</span>}
                             </li>
                           ))}
@@ -417,7 +441,8 @@ function Account() {
     setIsSubmitting(true);
     setMessage("");
     try {
-      const apiBaseUrl = import.meta.env["VITE_API_URL"] ?? "http://localhost:3001";
+      const apiBaseUrl =
+        import.meta.env["VITE_API_URL"] ?? "https://ithaly-ciaodmilano-frontend.vercel.app";
       const response = await fetch(
         `${apiBaseUrl.replace(/\/$/, "")}/api/account/${isRegister ? "register" : "login"}`,
         {

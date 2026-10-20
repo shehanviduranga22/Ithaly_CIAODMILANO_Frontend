@@ -46,7 +46,12 @@ export type ClientOrder = {
   date: string;
   total: number | string | null;
   currency: string;
-  items: { name: string; quantity: number | string | null }[];
+  items: {
+    name: string;
+    quantity: number | string | null;
+    productId?: string;
+    image?: string;
+  }[];
 };
 
 export type CheckoutDetails = {
@@ -67,6 +72,7 @@ type Commerce = {
   sessionToken: string | null;
   account: ClientAccount | null;
   orders: ClientOrder[];
+  confirmationOrder: ClientOrder | null;
   add: (id: string, quantity?: number) => void;
   buyNow: (id: string, quantity: number) => void;
   clearCheckoutItems: () => void;
@@ -103,6 +109,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [account, setAccount] = useState<ClientAccount | null>(null);
   const [orders, setOrders] = useState<ClientOrder[]>([]);
+  const [confirmationOrder, setConfirmationOrder] = useState<ClientOrder | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const accountRef = useRef(account);
@@ -124,6 +131,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
       wishlist,
       account,
       orders,
+      confirmationOrder,
       sessionToken,
       add: (id: string, quantity = 1) =>
         requireSignIn(() =>
@@ -168,8 +176,10 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
           pendingAction();
         }
       },
-      addOrder: (order: ClientOrder) =>
-        setOrders((current) => [order, ...current.filter((item) => item.id !== order.id)]),
+      addOrder: (order: ClientOrder) => {
+        setOrders((current) => [order, ...current.filter((item) => item.id !== order.id)]);
+        setConfirmationOrder(order);
+      },
       completeCheckout: () => {
         if (checkoutItems === null) {
           setCart({});
@@ -181,6 +191,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
         accountRef.current = null;
         setAccount(null);
         setOrders([]);
+        setConfirmationOrder(null);
         setSessionToken(null);
         setCart({});
         setCheckoutItems(null);
@@ -196,6 +207,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
     checkoutDetails,
     wishlist,
     orders,
+    confirmationOrder,
     sessionToken,
     pendingAction,
     navigate,

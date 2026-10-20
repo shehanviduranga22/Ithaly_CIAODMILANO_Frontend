@@ -43,13 +43,14 @@ function Payment() {
   const [exp, setExp] = useState("");
   const [cvc, setCvc] = useState("");
   const [flipped, setFlipped] = useState(false);
-  const [done, setDone] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [paymentError, setPaymentError] = useState("");
   const itemsToCheckout = checkoutItems ?? cart;
-  const { data: lines, isLoading, error } = useProductsByIds(
-    Object.keys(itemsToCheckout).filter((id) => (itemsToCheckout[id] ?? 0) > 0),
-  );
+  const {
+    data: lines,
+    isLoading,
+    error,
+  } = useProductsByIds(Object.keys(itemsToCheckout).filter((id) => (itemsToCheckout[id] ?? 0) > 0));
   const total = lines.reduce(
     (sum, product) => sum + product.price * (itemsToCheckout[product.id] ?? 0),
     0,
@@ -76,7 +77,8 @@ function Payment() {
     setIsPaying(true);
     setPaymentError("");
     try {
-      const apiBaseUrl = import.meta.env["VITE_API_URL"] ?? "http://localhost:3001";
+      const apiBaseUrl =
+        import.meta.env["VITE_API_URL"] ?? "https://ithaly-ciaodmilano-frontend.vercel.app";
       const response = await fetch(`${apiBaseUrl.replace(/\/$/, "")}/api/account/orders`, {
         method: "POST",
         headers: {
@@ -122,6 +124,8 @@ function Payment() {
         items: lines.map((product) => ({
           name: product.name,
           quantity: itemsToCheckout[product.id] ?? 0,
+          productId: product.id,
+          image: product.image,
         })),
       });
       completeCheckout();
@@ -129,7 +133,7 @@ function Payment() {
       setExp("");
       setCvc("");
       setName("");
-      setDone(true);
+      void navigate({ to: "/order-confirmation" });
     } catch (error) {
       setPaymentError(
         error instanceof Error ? error.message : "Unable to reach the order service.",
@@ -152,7 +156,10 @@ function Payment() {
 
   if (error) {
     return (
-      <section role="alert" className="flex min-h-[60vh] items-center justify-center px-6 text-center">
+      <section
+        role="alert"
+        className="flex min-h-[60vh] items-center justify-center px-6 text-center"
+      >
         <p className="text-sm text-stone">
           {error instanceof Error ? error.message : "Unable to load payment products."}
         </p>
@@ -161,7 +168,10 @@ function Payment() {
   }
   if (isLoading) {
     return (
-      <section role="status" className="flex min-h-[60vh] items-center justify-center px-6 text-center">
+      <section
+        role="status"
+        className="flex min-h-[60vh] items-center justify-center px-6 text-center"
+      >
         <p className="text-sm text-stone">Loading payment products…</p>
       </section>
     );
@@ -188,17 +198,6 @@ function Payment() {
     const d = v.replace(/\D/g, "").slice(0, 4);
     return d.length > 2 ? `${d.slice(0, 2)} / ${d.slice(2)}` : d;
   };
-
-  if (done)
-    return (
-      <section className="flex min-h-[65vh] flex-col items-center justify-center px-6 text-center editorial-rise">
-        <p className="text-[10px] uppercase tracking-[.2em] text-stone">Order Confirmed</p>
-        <h1 className="mt-4 font-serif text-5xl">Grazie.</h1>
-        <p className="mt-4 max-w-md text-sm text-stone">
-          Your demo payment was recorded and your order details have been saved.
-        </p>
-      </section>
-    );
 
   return (
     <form

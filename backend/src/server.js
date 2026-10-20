@@ -6,7 +6,7 @@ import { MongoClient, ObjectId } from "mongodb";
 const scrypt = promisify(scryptCallback);
 const port = Number(process.env.PORT ?? 3001);
 const frontendOrigins = new Set(
-  (process.env.FRONTEND_ORIGIN ?? "http://localhost:8080")
+  (process.env.FRONTEND_ORIGIN ?? "https://ithaly-ciaodmilano-frontend-fronten.vercel.app")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
@@ -156,6 +156,11 @@ function serializeOrder(order) {
       const entry = item && typeof item === "object" ? item : {};
       const product = entry.product && typeof entry.product === "object" ? entry.product : {};
       return {
+        productId:
+          asText(entry.productId) ||
+          asText(product._id) ||
+          asText(product.id) ||
+          undefined,
         name:
           asText(entry.name) ||
           asText(entry.title) ||
