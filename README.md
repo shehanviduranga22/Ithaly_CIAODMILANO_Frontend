@@ -25,16 +25,12 @@ card numbers, expiration dates, and security codes are never sent to the API or
 stored.
 
 Run the API from the `backend/` directory with `npm install` followed by
-`npm start`. The frontend defaults to the deployed API at
-`https://ithaly-ciaodmilano-frontend.vercel.app`, and the API allows the deployed
-frontend at `https://ithaly-ciaodmilano-frontend-fronten.vercel.app`.
+`npm start`. The Vite frontend runs at `http://localhost:8080` by default;
+update `FRONTEND_ORIGIN` in `backend/.env` if you change that address.
 
-For Vercel, set `VITE_API_URL` to the backend URL in the frontend project's
-environment variables. Set `MONGODB_URI`, `MONGODB_DATABASE`, and
-`FRONTEND_ORIGIN` in the backend project's environment variables, with
-`FRONTEND_ORIGIN` set to the frontend URL. Redeploy both projects after
-changing environment variables. For local development, set `VITE_API_URL` to
-`http://localhost:3001` and `FRONTEND_ORIGIN` to `http://localhost:8080`.
+The frontend uses `http://localhost:3001` by default. To use a different API
+address, copy `frontend/.env.example` to `frontend/.env.local` and set
+`VITE_API_URL`.
 
 The same API serves storefront products from `men_items`, `women_items`, and
 `accessories_items` in `ciao_d_milano`. The Men, Women, and Accessories pages

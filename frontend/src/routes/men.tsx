@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CollectionGrid, EditorialSlideshow, type EditorialSlide } from "@/components/storefront";
-import { useCatalogItems } from "@/lib/catalog-api";
 import menSlide1 from "@/assets/men_slideshow1.png";
 import menSlide2 from "@/assets/men_slideshow2.png";
 import menSlide3 from "@/assets/men_slideshow3.png";
@@ -57,15 +56,13 @@ export const Route = createFileRoute("/men")({
 });
 
 function MenPage() {
-  const { data = [], isLoading, error } = useCatalogItems("men_items");
   return (
     <>
       <EditorialSlideshow label="Men's collection highlights" slides={slides} />
       <CollectionGrid
         fittingRoom
-        items={data}
-        loading={isLoading}
-        error={error instanceof Error ? error.message : undefined}
+        pagination
+        catalogCollection="men_items"
       />
     </>
   );

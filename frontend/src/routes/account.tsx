@@ -14,8 +14,11 @@ import {
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PiecesLoading } from "@/components/pieces-loading";
 import { useCommerce, type ClientAccount, type ClientOrder } from "@/components/storefront";
 import atelierImage from "@/assets/ciao-women.jpg";
+import accountImage from "@/assets/account.png";
+import loginImage from "@/assets/login.png";
 import { imagery } from "@/lib/catalog";
 import { useProductsByIds } from "@/lib/catalog-api";
 
@@ -88,19 +91,10 @@ function AccountDashboard({
   ];
   const { data: products } = useProductsByIds(productIds);
   const productImages = new Map(products.map((product) => [product.id, product.image]));
-  const piecesCollected = orders.reduce(
-    (total, order) =>
-      total +
-      order.items.reduce((itemTotal, item) => {
-        const quantity = Number(item.quantity);
-        return itemTotal + (Number.isFinite(quantity) && quantity > 0 ? quantity : 1);
-      }, 0),
-    0,
-  );
   const memberSince = account.createdAt ? formatDate(account.createdAt) : "A valued client";
 
   return (
-    <section className="min-h-[calc(100svh-4rem)] overflow-hidden bg-ivory">
+    <section className="min-h-[calc(100svh-4rem)] overflow-hidden bg-paper">
       <div className="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
           <div>
@@ -118,14 +112,14 @@ function AccountDashboard({
           </Button>
         </div>
 
-        <div className="editorial-rise relative mt-8 overflow-hidden bg-ink-deep text-paper">
+        <div className="editorial-rise relative left-1/2 mt-8 w-screen -translate-x-1/2 overflow-hidden bg-ink-deep text-paper">
           <img
             src={atelierImage}
             alt=""
             className="absolute inset-0 h-full w-full object-cover object-center opacity-30"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-ink-deep via-ink-deep/85 to-ink-deep/35" />
-          <div className="relative grid gap-8 px-7 py-10 sm:px-10 sm:py-14 lg:grid-cols-[1fr_auto] lg:items-end lg:px-16">
+          <div className="relative mx-auto grid w-full max-w-[1440px] gap-8 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[1fr_auto] lg:items-end lg:px-12">
             <div>
               <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-sand">
                 <Sparkles className="size-3" aria-hidden="true" />
@@ -146,10 +140,9 @@ function AccountDashboard({
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {[
             { label: "Orders placed", value: String(orders.length), icon: ShoppingBag },
-            { label: "Pieces collected", value: String(piecesCollected), icon: PackageCheck },
             { label: "Client status", value: "Private Client", icon: Sparkles },
           ].map(({ label, value, icon: Icon }) => (
             <div key={label} className="border border-border bg-paper p-5 sm:p-6">
@@ -172,7 +165,7 @@ function AccountDashboard({
               aria-hidden="true"
               className="pointer-events-none absolute -left-3 top-[4.35rem] size-36 rounded-full border border-burgundy/10"
             />
-            <div className="relative border border-[#d9ccbb] bg-paper p-4 shadow-[0_18px_55px_-35px_rgba(40,28,20,0.45)] sm:p-5">
+            <div className="relative border border-[#d9ccbb] bg-paper/95 p-4 shadow-[0_18px_55px_-35px_rgba(40,28,20,0.45)] sm:p-5">
               <div className="relative min-h-44 overflow-hidden bg-ink-deep px-6 py-6 text-paper sm:px-8 sm:py-7">
                 <img
                   src={atelierImage}
@@ -213,39 +206,34 @@ function AccountDashboard({
                 </div>
               </div>
 
-              <div className="border-x border-b border-[#d9ccbb] bg-paper/80 px-5 py-5 sm:px-7">
-                <div className="flex items-center gap-2 text-[9px] uppercase tracking-[0.19em] text-burgundy">
-                  <span className="size-1.5 rounded-full bg-burgundy" aria-hidden="true" />
-                  Your profile
-                  <span className="ml-auto text-stone/70">01 / 01</span>
-                </div>
-                <h2 id="account-details-heading" className="mt-2 font-serif text-3xl text-ink">
+              <div className="border-x border-b border-[#d9ccbb] bg-paper px-5 py-5 sm:px-7">
+                <h2 id="account-details-heading" className="font-serif text-3xl text-ink">
                   Account details
                 </h2>
 
-                <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <div className="min-w-0 border border-border/80 bg-paper p-4 transition-colors hover:border-burgundy/40">
+                <dl className="mt-6 grid gap-x-6 gap-y-5 sm:grid-cols-2">
+                  <div className="min-w-0 py-2">
                     <dt className="flex items-center gap-2 text-[9px] uppercase tracking-[0.15em] text-stone">
                       <UserRound className="size-3.5 text-burgundy" aria-hidden="true" />
                       Full name
                     </dt>
-                    <dd className="mt-2 truncate text-sm text-ink">
+                    <dd className="mt-2 truncate font-serif text-xl text-ink">
                       {[account.firstName, account.lastName].filter(Boolean).join(" ") || "—"}
                     </dd>
                   </div>
-                  <div className="min-w-0 border border-border/80 bg-paper p-4 transition-colors hover:border-burgundy/40 sm:col-span-2">
+                  <div className="min-w-0 py-2 sm:col-span-2">
                     <dt className="flex items-center gap-2 text-[9px] uppercase tracking-[0.15em] text-stone">
                       <Check className="size-3.5 text-burgundy" aria-hidden="true" />
                       Email address
                     </dt>
                     <dd className="mt-2 break-all text-sm text-ink">{account.email}</dd>
                   </div>
-                  <div className="min-w-0 border border-border/80 bg-paper p-4 transition-colors hover:border-burgundy/40">
+                  <div className="min-w-0 py-2">
                     <dt className="flex items-center gap-2 text-[9px] uppercase tracking-[0.15em] text-stone">
                       <Sparkles className="size-3.5 text-burgundy" aria-hidden="true" />
                       Client since
                     </dt>
-                    <dd className="mt-2 text-sm text-ink">{memberSince}</dd>
+                    <dd className="mt-2 font-serif text-xl text-ink">{memberSince}</dd>
                   </div>
                 </dl>
 
@@ -268,7 +256,7 @@ function AccountDashboard({
             </div>
           </section>
 
-          <section aria-labelledby="order-history-heading">
+          <section aria-labelledby="order-history-heading" className="bg-paper/95 p-5 sm:p-6">
             <div className="flex items-end justify-between border-b border-ink pb-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.2em] text-stone">
@@ -297,37 +285,54 @@ function AccountDashboard({
                 </a>
               </div>
             ) : (
-              <ul className="divide-y divide-border border-b border-border">
-                {orders.map((order) => (
-                  <li key={order.id} className="py-5">
-                    <article className="border border-border bg-paper p-5 sm:p-6">
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                          <p className="text-[10px] uppercase tracking-[0.16em] text-stone">
-                            Order
-                          </p>
-                          <h3 className="mt-1 font-serif text-xl">{order.id}</h3>
+              <ul className="mt-5 grid gap-5">
+                {orders.map((order, orderIndex) => (
+                  <li key={order.id}>
+                    <article className="group overflow-hidden border border-[#d9ccbb] bg-paper shadow-[0_14px_38px_-30px_rgba(40,28,20,0.5)] transition-shadow hover:shadow-[0_18px_44px_-28px_rgba(40,28,20,0.55)]">
+                      <div className="relative isolate overflow-hidden bg-ivory px-5 py-5 sm:px-6">
+                        <div
+                          aria-hidden="true"
+                          className="pointer-events-none absolute -right-10 -top-16 -z-10 size-40 rounded-full border border-burgundy/10 transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="text-[9px] uppercase tracking-[0.2em] text-burgundy">
+                              House order <span className="text-stone/60">·</span>{" "}
+                              {String(orders.length - orderIndex).padStart(2, "0")}
+                            </p>
+                            <h3 className="mt-2 break-all font-serif text-xl text-ink">
+                              {order.id}
+                            </h3>
+                          </div>
+                          <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-paper px-3 py-1.5 text-[9px] uppercase tracking-[0.12em] text-ink shadow-sm">
+                            <span
+                              className="size-1.5 rounded-full bg-burgundy"
+                              aria-hidden="true"
+                            />
+                            {order.status}
+                          </span>
                         </div>
-                        <span className="inline-flex items-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] text-ink">
-                          <span className="size-1.5 rounded-full bg-burgundy" aria-hidden="true" />
-                          {order.status}
-                        </span>
                       </div>
-                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-y border-border py-3 text-xs text-stone">
-                        <span className="inline-flex items-center gap-2">
-                          <Clock3 className="size-3.5" aria-hidden="true" />
+                      <div className="grid gap-4 px-5 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-6">
+                        <span className="inline-flex items-center gap-2 text-xs text-stone">
+                          <Clock3 className="size-3.5 text-burgundy" aria-hidden="true" />
                           {formatDate(order.date)}
                         </span>
-                        <span className="font-medium text-ink">
-                          {formatMoney(order.total, order.currency)}
-                        </span>
+                        <div className="sm:text-right">
+                          <p className="text-[9px] uppercase tracking-[0.16em] text-stone">
+                            Order total
+                          </p>
+                          <p className="mt-1 font-serif text-xl text-ink">
+                            {formatMoney(order.total, order.currency)}
+                          </p>
+                        </div>
                       </div>
                       {order.items.length > 0 && (
-                        <ul className="mt-4 grid gap-2">
+                        <ul className="mx-5 mb-5 divide-y divide-border border-t border-border sm:mx-6">
                           {order.items.map((item, index) => (
                             <li
                               key={`${order.id}-${item.name}-${index}`}
-                              className="flex items-center gap-3 text-xs text-stone"
+                              className="flex items-center gap-3 py-3"
                             >
                               <img
                                 src={
@@ -336,12 +341,18 @@ function AccountDashboard({
                                   imagery.stillLife
                                 }
                                 alt={item.name}
-                                width={56}
-                                height={72}
-                                className="size-14 shrink-0 object-cover"
+                                width={64}
+                                height={80}
+                                className="size-16 shrink-0 object-cover"
                               />
-                              <span className="min-w-0 flex-1">{item.name}</span>
-                              {item.quantity !== null && <span>Qty {item.quantity}</span>}
+                              <span className="min-w-0 flex-1 font-serif text-sm text-ink">
+                                {item.name}
+                              </span>
+                              {item.quantity !== null && (
+                                <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] text-stone">
+                                  Qty {item.quantity}
+                                </span>
+                              )}
                             </li>
                           ))}
                         </ul>
@@ -441,8 +452,7 @@ function Account() {
     setIsSubmitting(true);
     setMessage("");
     try {
-      const apiBaseUrl =
-        import.meta.env["VITE_API_URL"] ?? "https://ithaly-ciaodmilano-frontend.vercel.app";
+      const apiBaseUrl = import.meta.env["VITE_API_URL"] ?? "http://localhost:3001";
       const response = await fetch(
         `${apiBaseUrl.replace(/\/$/, "")}/api/account/${isRegister ? "register" : "login"}`,
         {
@@ -496,8 +506,8 @@ function Account() {
     <section className="grid min-h-[calc(100svh-4rem)] bg-ivory lg:grid-cols-[minmax(0,1.08fr)_minmax(480px,0.92fr)]">
       <div className="relative min-h-[42svh] overflow-hidden bg-ink-deep lg:min-h-[760px]">
         <img
-          src={atelierImage}
-          alt="CIAO D MILANO atelier campaign"
+          src={isRegister ? accountImage : loginImage}
+          alt={isRegister ? "CIAO D MILANO private client account" : "CIAO D MILANO sign in"}
           width={1024}
           height={1280}
           className="editorial-fade absolute inset-0 h-full w-full object-cover object-center"
@@ -605,11 +615,17 @@ function Account() {
             )}
 
             <Button size="lg" type="submit" disabled={isSubmitting} className="mt-2 h-13 w-full">
-              {isSubmitting
-                ? "Please wait..."
-                : isRegister
-                  ? "Create My Account"
-                  : "Enter My Account"}
+              {isSubmitting ? (
+                <PiecesLoading
+                  label={isRegister ? "Creating account" : "Signing in"}
+                  compact
+                  className="text-primary-foreground"
+                />
+              ) : isRegister ? (
+                "Create My Account"
+              ) : (
+                "Enter My Account"
+              )}
             </Button>
 
             {message && (

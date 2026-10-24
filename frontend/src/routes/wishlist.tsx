@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { PiecesLoading } from "@/components/pieces-loading";
 import { CollectionGrid, EmptyState, useCommerce } from "@/components/storefront";
 import { useProductsByIds } from "@/lib/catalog-api";
 export const Route = createFileRoute("/wishlist")({
@@ -17,31 +17,21 @@ export const Route = createFileRoute("/wishlist")({
 });
 
 function Wishlist() {
-  const { account, wishlist, requireSignIn } = useCommerce();
-  const navigate = useNavigate();
-  const requestedSignIn = useRef(false);
+  const { account, wishlist } = useCommerce();
   const { data: items, isLoading, error } = useProductsByIds(wishlist);
-
-  useEffect(() => {
-    if (account || requestedSignIn.current) return;
-    requestedSignIn.current = true;
-    requireSignIn(() => void navigate({ to: "/wishlist" }));
-  }, [account, navigate, requireSignIn]);
 
   if (!account) {
     return (
-      <section
-        role="status"
-        className="flex min-h-[60vh] items-center justify-center px-6 text-center"
-      >
-        <p className="text-sm text-stone">Please sign in to view your wishlist.</p>
-      </section>
+      <EmptyState title="Your Wishlist" copy="Save the pieces you love and return to them here." />
     );
   }
 
   if (error) {
     return (
-      <section role="alert" className="flex min-h-[60vh] items-center justify-center px-6 text-center">
+      <section
+        role="alert"
+        className="flex min-h-[60vh] items-center justify-center px-6 text-center"
+      >
         <p className="text-sm text-stone">
           {error instanceof Error ? error.message : "Unable to load your wishlist."}
         </p>
@@ -49,11 +39,7 @@ function Wishlist() {
     );
   }
   if (isLoading) {
-    return (
-      <section role="status" className="flex min-h-[60vh] items-center justify-center px-6 text-center">
-        <p className="text-sm text-stone">Loading your wishlist…</p>
-      </section>
-    );
+    return <PiecesLoading label="Loading your wishlist" className="min-h-[60vh] px-6" />;
   }
 
   if (!items.length) {

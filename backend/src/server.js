@@ -6,7 +6,7 @@ import { MongoClient, ObjectId } from "mongodb";
 const scrypt = promisify(scryptCallback);
 const port = Number(process.env.PORT ?? 3001);
 const frontendOrigins = new Set(
-  (process.env.FRONTEND_ORIGIN ?? "https://ithaly-ciaodmilano-frontend-fronten.vercel.app")
+  (process.env.FRONTEND_ORIGIN ?? "http://localhost:8080")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
@@ -18,20 +18,7 @@ const catalogCollections = [
   { name: "women_items", label: "Women" },
   { name: "accessories_items", label: "Accessories" },
 ];
-const catalog = new Map([
-  ["camel-wool-coat", { name: "Camel Wool Coat", unitPrice: 1290 }],
-  ["silk-column-dress", { name: "Silk Column Dress", unitPrice: 640 }],
-  ["atelier-blazer", { name: "Atelier Blazer", unitPrice: 890 }],
-  ["nero-suit", { name: "Nero Wool Suit", unitPrice: 2450 }],
-  ["merino-knit", { name: "Fine Merino Knit", unitPrice: 390 }],
-  ["milan-handbag", { name: "Milano Handbag", unitPrice: 1850 }],
-  ["cashmere-knit", { name: "Ivory Cashmere Knit", unitPrice: 420 }],
-  ["penny-loafer", { name: "Brera Penny Loafer", unitPrice: 690 }],
-  ["silk-twill-scarf", { name: "Como Silk Scarf", unitPrice: 280 }],
-  ["calfskin-belt", { name: "Cintura Calfskin Belt", unitPrice: 320 }],
-  ["leather-cardholder", { name: "Porta Carte Cardholder", unitPrice: 210 }],
-  ["cashmere-scarf", { name: "Cashmere Travel Wrap", unitPrice: 450 }],
-]);
+const catalog = new Map();
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -257,11 +244,51 @@ async function start() {
         const collection = catalogCollections.find((entry) => entry.name === collectionName);
         const limitValue = url.searchParams.get("limit");
         const limit = limitValue === null ? null : Number(limitValue);
+        const pageValue = url.searchParams.get("page");
+        const pageSizeValue = url.searchParams.get("pageSize");
+        const paginated = pageValue !== null || pageSizeValue !== null;
+        const page = pageValue === null ? null : Number(pageValue);
+        const pageSize = pageSizeValue === null ? null : Number(pageSizeValue);
+        const category = url.searchParams.get("category");
+        const sort = url.searchParams.get("sort") ?? "featured";
         if (
           !collection ||
-          (limit !== null && (!Number.isInteger(limit) || limit < 1 || limit > 100))
+          (limit !== null && (!Number.isInteger(limit) || limit < 1 || limit > 100)) ||
+          (paginated &&
+            (limit !== null ||
+              !Number.isInteger(page) ||
+              page < 1 ||
+              !Number.isInteger(pageSize) ||
+              pageSize < 1 ||
+              pageSize > 100 ||
+              !["featured", "low", "high"].includes(sort))) ||
+          (category !== null && category.length > 100)
         ) {
-          throw new HttpError(400, "A valid catalog collection and optional limit are required.");
+          throw new HttpError(400, "A valid catalog collection and pagination options are required.");
+        }
+
+        const filter = category ? { category } : {};
+        if (paginated) {
+          const sortOrder = sort === "high" ? -1 : 1;
+          const sortOptions = sort === "featured" ? { _id: 1 } : { price: sortOrder, _id: 1 };
+          const [products, totalCount, categories] = await Promise.all([
+            database
+              .collection(collection.name)
+              .find(filter)
+              .project({ name: 1, price: 1, category: 1, design: 1, image: 1 })
+              .sort(sortOptions)
+              .skip((page - 1) * pageSize)
+              .limit(pageSize)
+              .toArray(),
+            database.collection(collection.name).countDocuments(filter),
+            database.collection(collection.name).distinct("category"),
+          ]);
+          sendJson(response, 200, {
+            items: products.map((product) => serializeCatalogProduct(product, collection.label)),
+            totalCount,
+            categories: categories.filter((value) => typeof value === "string").sort(),
+          });
+          return;
         }
 
         let cursor = database

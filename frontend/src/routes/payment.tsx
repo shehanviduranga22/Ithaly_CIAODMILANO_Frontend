@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { PiecesLoading } from "@/components/pieces-loading";
 import { money } from "@/lib/catalog";
 import { useProductsByIds } from "@/lib/catalog-api";
 import { useCommerce } from "@/components/storefront";
@@ -77,8 +78,7 @@ function Payment() {
     setIsPaying(true);
     setPaymentError("");
     try {
-      const apiBaseUrl =
-        import.meta.env["VITE_API_URL"] ?? "https://ithaly-ciaodmilano-frontend.vercel.app";
+      const apiBaseUrl = import.meta.env["VITE_API_URL"] ?? "http://localhost:3001";
       const response = await fetch(`${apiBaseUrl.replace(/\/$/, "")}/api/account/orders`, {
         method: "POST",
         headers: {
@@ -167,24 +167,15 @@ function Payment() {
     );
   }
   if (isLoading) {
-    return (
-      <section
-        role="status"
-        className="flex min-h-[60vh] items-center justify-center px-6 text-center"
-      >
-        <p className="text-sm text-stone">Loading payment products…</p>
-      </section>
-    );
+    return <PiecesLoading label="Loading payment products" className="min-h-[60vh] px-6" />;
   }
 
   if (!checkoutDetails || lines.length === 0) {
     return (
-      <section
-        role="status"
-        className="flex min-h-[60vh] items-center justify-center px-6 text-center"
-      >
-        <p className="text-sm text-stone">Returning you to checkout to complete your details.</p>
-      </section>
+      <PiecesLoading
+        label="Returning to checkout to complete your details"
+        className="min-h-[60vh] px-6"
+      />
     );
   }
 
@@ -465,7 +456,11 @@ function Payment() {
           className="mt-6 w-full"
           disabled={!lines.length || isPaying}
         >
-          {isPaying ? "Saving order..." : `Pay ${money(total)}`}
+          {isPaying ? (
+            <PiecesLoading label="Saving order" compact className="text-primary-foreground" />
+          ) : (
+            `Pay ${money(total)}`
+          )}
         </Button>
         {paymentError && (
           <p

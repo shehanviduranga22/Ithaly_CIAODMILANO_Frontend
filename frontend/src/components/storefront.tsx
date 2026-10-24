@@ -5,6 +5,8 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Heart,
   Menu,
   Pause,
@@ -24,9 +26,11 @@ import {
   type ReactNode,
 } from "react";
 import { Button } from "@/components/ui/button";
+import { PiecesLoading } from "@/components/pieces-loading";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { imagery, money, products, type Product } from "@/lib/catalog";
+import { usePaginatedCatalogItems, type CatalogCollection } from "@/lib/catalog-api";
 import megaAccessories from "@/assets/mega_accessories.png";
 import megaCollection from "@/assets/mega_collection.png";
 import megaMen from "@/assets/mega_men.png";
@@ -100,7 +104,6 @@ type MegaLink =
   | { label: string; to: MegaStaticPath; hash?: string }
   | { label: string; to: "/men" | "/women" | "/accessories"; category: string }
   | { label: string; productId: string };
-
 export function CommerceProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -229,6 +232,13 @@ const megaNav = [
     imageAlt: "CIAO D MILANO menswear campaign",
     feature: "The Modern Milanese",
     copy: "Precise tailoring, fine knitwear and enduring leather.",
+    edit: {
+      eyebrow: "A wardrobe in motion",
+      title: "Quiet confidence",
+      copy: "Considered layers, made to move through the city.",
+      linkLabel: "Explore the men's edit",
+      to: "/men",
+    },
     columns: [
       {
         title: "Shop",
@@ -237,14 +247,6 @@ const megaNav = [
           { label: "New Arrivals", to: "/new-arrivals" },
           { label: "Tailoring", to: "/men", category: "Tailoring" },
           { label: "Knitwear", to: "/men", category: "Knitwear" },
-        ],
-      },
-      {
-        title: "Discover",
-        links: [
-          { label: "The Nero Suit", productId: "nero-suit" },
-          { label: "Fine Merino", productId: "merino-knit" },
-          { label: "Brera Loafer", productId: "penny-loafer" },
         ],
       },
     ],
@@ -256,6 +258,13 @@ const megaNav = [
     imageAlt: "CIAO D MILANO womenswear campaign",
     feature: "The Woman of Milan",
     copy: "Fluid silk, sculptural tailoring and considered essentials.",
+    edit: {
+      eyebrow: "A note on elegance",
+      title: "Softly sculpted",
+      copy: "Fluid forms and thoughtful details for every occasion.",
+      linkLabel: "Explore the women's edit",
+      to: "/women",
+    },
     columns: [
       {
         title: "Shop",
@@ -264,14 +273,6 @@ const megaNav = [
           { label: "New Arrivals", to: "/new-arrivals" },
           { label: "Outerwear", to: "/women", category: "Outerwear" },
           { label: "Evening", to: "/women", category: "Evening" },
-        ],
-      },
-      {
-        title: "Discover",
-        links: [
-          { label: "Silk Column Dress", productId: "silk-column-dress" },
-          { label: "Atelier Blazer", productId: "atelier-blazer" },
-          { label: "Milano Handbag", productId: "milan-handbag" },
         ],
       },
     ],
@@ -283,6 +284,13 @@ const megaNav = [
     imageAlt: "The latest CIAO D MILANO collection",
     feature: "The New Collection",
     copy: "A considered edit for the season ahead.",
+    edit: {
+      eyebrow: "Just landed",
+      title: "The season, reimagined",
+      copy: "Fresh perspectives, shaped by the rhythm of Milan.",
+      linkLabel: "See what's new",
+      to: "/new-arrivals",
+    },
     columns: [
       {
         title: "Explore",
@@ -291,14 +299,6 @@ const megaNav = [
           { label: "For Her", to: "/women" },
           { label: "For Him", to: "/men" },
           { label: "Accessories", to: "/accessories" },
-        ],
-      },
-      {
-        title: "Highlights",
-        links: [
-          { label: "Camel Wool Coat", productId: "camel-wool-coat" },
-          { label: "Nero Wool Suit", productId: "nero-suit" },
-          { label: "Como Silk Scarf", productId: "silk-twill-scarf" },
         ],
       },
     ],
@@ -310,6 +310,13 @@ const megaNav = [
     imageAlt: "Italian leather accessories and silk",
     feature: "Finishing Touches",
     copy: "Objects of quiet distinction, made by specialist hands.",
+    edit: {
+      eyebrow: "Considered finishing",
+      title: "Details with a point of view",
+      copy: "Small gestures, chosen to make the whole.",
+      linkLabel: "Explore the accessories",
+      to: "/accessories",
+    },
     columns: [
       {
         title: "Shop",
@@ -318,14 +325,6 @@ const megaNav = [
           { label: "Leather Goods", to: "/accessories", category: "Leather" },
           { label: "Silk", to: "/accessories", category: "Silk" },
           { label: "Cashmere", to: "/accessories", category: "Cashmere" },
-        ],
-      },
-      {
-        title: "Discover",
-        links: [
-          { label: "Como Silk Scarf", productId: "silk-twill-scarf" },
-          { label: "Cintura Belt", productId: "calfskin-belt" },
-          { label: "Porta Carte", productId: "leather-cardholder" },
         ],
       },
     ],
@@ -337,6 +336,13 @@ const megaNav = [
     imageAlt: "CIAO D MILANO seasonal collection in Milan",
     feature: "The House Edit",
     copy: "Stories of material, proportion and Italian craft.",
+    edit: {
+      eyebrow: "Made in Milano",
+      title: "A house of intention",
+      copy: "Meet the ideas and hands behind every collection.",
+      linkLabel: "Our Milanese story",
+      to: "/about",
+    },
     columns: [
       {
         title: "Collections",
@@ -345,14 +351,6 @@ const megaNav = [
           { label: "New Arrivals", to: "/new-arrivals" },
           { label: "Women", to: "/women" },
           { label: "Men", to: "/men" },
-        ],
-      },
-      {
-        title: "The House",
-        links: [
-          { label: "Our Story", to: "/about", hash: "our-story" },
-          { label: "The Art of Making", to: "/about", hash: "art-of-making" },
-          { label: "Shipping & Delivery", to: "/shipping-delivery" },
         ],
       },
     ],
@@ -523,7 +521,7 @@ export function SiteHeader() {
             aria-hidden={!expanded}
             className={`absolute inset-x-0 top-full hidden overflow-hidden border-t border-border bg-paper shadow-xl transition-[opacity,transform,visibility] duration-300 lg:block ${expanded ? "visible translate-y-0 opacity-100" : "invisible -translate-y-2 opacity-0"}`}
           >
-            <div className="mx-auto grid max-w-[1440px] grid-cols-[1fr_1fr_1.35fr] gap-12 px-10 py-9">
+            <div className="mx-auto grid max-w-[1440px] grid-cols-[0.8fr_1fr_1.35fr] gap-8 px-10 py-9">
               {item.columns.map((column) => (
                 <div key={column.title}>
                   <p className="mb-5 text-[9px] uppercase tracking-[0.2em] text-stone">
@@ -542,6 +540,32 @@ export function SiteHeader() {
                   </ul>
                 </div>
               ))}
+              <div className="relative isolate flex min-h-52 flex-col justify-center overflow-hidden bg-ivory px-7 py-6">
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-12 -top-14 -z-10 size-48 rounded-full border border-burgundy/15"
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-3 -top-5 -z-10 size-32 rounded-full border border-burgundy/10"
+                />
+                <p className="text-[9px] uppercase tracking-[0.2em] text-burgundy">
+                  {item.edit.eyebrow}
+                </p>
+                <h2 className="mt-3 max-w-[16ch] font-serif text-2xl leading-tight">
+                  {item.edit.title}
+                </h2>
+                <p className="mt-2 max-w-[30ch] text-[11px] leading-5 text-stone">
+                  {item.edit.copy}
+                </p>
+                <Link
+                  to={item.edit.to}
+                  tabIndex={expanded ? 0 : -1}
+                  className="mt-5 inline-flex items-center gap-2 text-[9px] uppercase tracking-[0.15em] text-ink transition-colors hover:text-burgundy"
+                >
+                  {item.edit.linkLabel} <ArrowRight className="size-3" aria-hidden="true" />
+                </Link>
+              </div>
               <Link
                 to={item.to}
                 tabIndex={expanded ? 0 : -1}
@@ -561,7 +585,7 @@ export function SiteHeader() {
                   <span className="mt-2 font-serif text-2xl">{item.feature}</span>
                   <span className="mt-2 text-[11px] leading-5 text-paper/60">{item.copy}</span>
                   <span className="mt-4 inline-flex items-center gap-2 text-[9px] uppercase tracking-[0.18em]">
-                    Discover <ArrowRight className="size-3" />
+                    Explore the edit <ArrowRight className="size-3" />
                   </span>
                 </span>
               </Link>
@@ -1011,23 +1035,36 @@ export function EditorialSlideshow({
 }
 
 export function CollectionGrid({
-  items = products,
+  items,
   fittingRoom = false,
+  pagination = false,
+  catalogCollection,
   loading = false,
   error,
 }: {
   items?: Product[];
   fittingRoom?: boolean;
+  pagination?: boolean;
+  catalogCollection?: CatalogCollection;
   loading?: boolean;
   error?: string | undefined;
 }) {
   const [sort, setSort] = useState("featured");
+  const [page, setPage] = useState(1);
   const location = useRouterState({ select: (state) => state.location });
   const selectedCategory =
     "category" in location.search && typeof location.search.category === "string"
       ? location.search.category
       : "All";
   const [filter, setFilter] = useState(selectedCategory);
+  const remotePagination = pagination && catalogCollection !== undefined;
+  const catalogQuery = usePaginatedCatalogItems(
+    remotePagination ? catalogCollection : undefined,
+    page,
+    20,
+    filter === "All" ? undefined : filter,
+    sort,
+  );
   useEffect(() => {
     setFilter(selectedCategory);
     if (location.hash !== "collection-products") return;
@@ -1036,20 +1073,56 @@ export function CollectionGrid({
     );
     return () => window.cancelAnimationFrame(frame);
   }, [selectedCategory, location.href, location.hash]);
+  const remoteItems = catalogQuery.data?.items;
+  const currentItems = useMemo(
+    () => (remotePagination ? (remoteItems ?? []) : (items ?? products)),
+    [items, remoteItems, remotePagination],
+  );
   const categories = useMemo(
-    () => [
-      "All",
-      ...Array.from(new Set(items.map((p) => p.category.split("·")[1]?.trim() ?? p.category))),
-    ],
-    [items],
+    () =>
+      remotePagination && catalogQuery.data
+        ? ["All", ...catalogQuery.data.categories]
+        : [
+            "All",
+            ...Array.from(
+              new Set(currentItems.map((p) => p.category.split("·")[1]?.trim() ?? p.category)),
+            ),
+          ],
+    [catalogQuery.data, currentItems, remotePagination],
   );
-  const filtered =
-    filter === "All"
-      ? items
-      : items.filter((p) => (p.category.split("·")[1]?.trim() ?? p.category) === filter);
-  const sorted = [...filtered].sort((a, b) =>
-    sort === "low" ? a.price - b.price : sort === "high" ? b.price - a.price : 0,
-  );
+  const filtered = remotePagination
+    ? currentItems
+    : filter === "All"
+      ? currentItems
+      : currentItems.filter(
+          (p) => (p.category.split("·")[1]?.trim() ?? p.category) === filter,
+        );
+  const sorted = remotePagination
+    ? filtered
+    : [...filtered].sort((a, b) =>
+        sort === "low" ? a.price - b.price : sort === "high" ? b.price - a.price : 0,
+      );
+  const resultCount = remotePagination
+    ? (catalogQuery.data?.totalCount ?? 0)
+    : sorted.length;
+  const pageCount = pagination ? Math.ceil(resultCount / 20) : 1;
+  const displayedProducts = remotePagination
+    ? sorted
+    : pagination
+      ? sorted.slice((page - 1) * 20, page * 20)
+      : sorted;
+  const isLoading = loading || (remotePagination && catalogQuery.isFetching);
+  const displayError =
+    error ??
+    (remotePagination && catalogQuery.error instanceof Error
+      ? catalogQuery.error.message
+      : undefined);
+  useEffect(() => {
+    setPage(1);
+  }, [filter, sort]);
+  useEffect(() => {
+    setPage((current) => Math.min(current, Math.max(pageCount, 1)));
+  }, [pageCount]);
   return (
     <section
       id="collection-products"
@@ -1062,7 +1135,7 @@ export function CollectionGrid({
             aria-label="Filter by category"
           >
             <span className="text-[10px] uppercase tracking-[0.16em] text-stone">
-              {sorted.length} Pieces
+              {resultCount} Pieces
             </span>
             <span className="h-3 w-px bg-border" aria-hidden="true" />
             {categories.map((category) => (
@@ -1070,7 +1143,10 @@ export function CollectionGrid({
                 variant="ghost"
                 key={category}
                 type="button"
-                onClick={() => setFilter(category)}
+                onClick={() => {
+                  setFilter(category);
+                  setPage(1);
+                }}
                 aria-pressed={filter === category}
                 className={`h-auto p-0 text-[10px] uppercase tracking-[0.16em] transition-colors duration-300 hover:bg-transparent hover:text-ink ${filter === category ? "text-ink underline underline-offset-[6px]" : "text-stone hover:text-ink"}`}
               >
@@ -1082,7 +1158,10 @@ export function CollectionGrid({
             Sort{" "}
             <select
               value={sort}
-              onChange={(e) => setSort(e.target.value)}
+              onChange={(e) => {
+                setSort(e.target.value);
+                setPage(1);
+              }}
               className="bg-transparent text-right outline-none"
             >
               <option value="featured">Featured</option>
@@ -1092,22 +1171,67 @@ export function CollectionGrid({
           </label>
         </div>
       </div>
-      {error ? (
+      {displayError ? (
         <p role="alert" className="py-16 text-center text-sm text-stone">
-          {error}
+          {displayError}
         </p>
-      ) : loading ? (
-        <p role="status" className="py-16 text-center text-sm text-stone">
-          Loading pieces…
-        </p>
+      ) : isLoading ? (
+        <PiecesLoading />
       ) : sorted.length === 0 ? (
         <p className="py-16 text-center text-sm text-stone">No pieces in this category yet.</p>
       ) : (
         <div className="grid grid-cols-2 gap-x-3 gap-y-12 md:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
-          {sorted.map((product) => (
+          {displayedProducts.map((product) => (
             <ProductCard key={product.id} product={product} fittingRoom={fittingRoom} />
           ))}
         </div>
+      )}
+      {!displayError &&
+        (remotePagination ? catalogQuery.data !== undefined : !isLoading) &&
+        pageCount > 1 && (
+        <nav
+          className="mt-10 flex flex-wrap items-center justify-center gap-2"
+          aria-label="Collection pages"
+        >
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-label="Previous page"
+            disabled={page === 1}
+            onClick={() => setPage((current) => current - 1)}
+            className="hover:border-black hover:bg-black hover:text-white"
+          >
+            <ChevronLeft />
+            Previous
+          </Button>
+          {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
+            <Button
+              key={pageNumber}
+              type="button"
+              variant={pageNumber === page ? "default" : "outline"}
+              size="sm"
+              aria-label={`Page ${pageNumber}`}
+              aria-current={pageNumber === page ? "page" : undefined}
+              onClick={() => setPage(pageNumber)}
+              className="hover:border-black hover:bg-black hover:text-white"
+            >
+              {pageNumber}
+            </Button>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-label="Next page"
+            disabled={page === pageCount}
+            onClick={() => setPage((current) => current + 1)}
+            className="hover:border-black hover:bg-black hover:text-white"
+          >
+            Next
+            <ChevronRight />
+          </Button>
+        </nav>
       )}
     </section>
   );
@@ -1130,11 +1254,7 @@ export function ProductGrid({
     );
   }
   if (loading) {
-    return (
-      <p role="status" className="py-16 text-center text-sm text-stone">
-        Loading pieces…
-      </p>
-    );
+    return <PiecesLoading />;
   }
   if (items.length === 0) {
     return (

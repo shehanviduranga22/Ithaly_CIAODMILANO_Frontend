@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Search as SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
+import { PiecesLoading } from "@/components/pieces-loading";
 import { ProductCard } from "@/components/storefront";
 import { products } from "@/lib/catalog";
 import { mixCatalogProducts, useCatalogItems } from "@/lib/catalog-api";
@@ -77,9 +78,7 @@ function SearchPage() {
         {searchTerm ? `${catalog.length} results for “${query.trim()}”` : "Enter a search term"}
       </p>
       {searchTerm && isLoading && (
-        <p role="status" className="mb-6 text-sm text-stone">
-          Searching the collection…
-        </p>
+        <PiecesLoading label="Searching the collection" className="mb-6 py-2" />
       )}
       {searchTerm && error instanceof Error && (
         <p role="alert" className="mb-6 text-sm text-destructive">

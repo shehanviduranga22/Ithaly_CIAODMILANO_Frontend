@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Minus, Plus, X } from "lucide-react";
-import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { PiecesLoading } from "@/components/pieces-loading";
 import { EmptyState, useCommerce } from "@/components/storefront";
 import { money } from "@/lib/catalog";
 import { useProductsByIds } from "@/lib/catalog-api";
@@ -22,32 +22,28 @@ export const Route = createFileRoute("/cart")({
 function Cart() {
   const { account, cart, setQty, remove, requireSignIn, clearCheckoutItems } = useCommerce();
   const navigate = useNavigate();
-  const requestedSignIn = useRef(false);
-  const { data: lines, isLoading, error } = useProductsByIds(
-    Object.keys(cart).filter((id) => (cart[id] ?? 0) > 0),
-  );
+  const {
+    data: lines,
+    isLoading,
+    error,
+  } = useProductsByIds(Object.keys(cart).filter((id) => (cart[id] ?? 0) > 0));
   const total = lines.reduce((sum, product) => sum + product.price * (cart[product.id] ?? 0), 0);
-
-  useEffect(() => {
-    if (account || requestedSignIn.current) return;
-    requestedSignIn.current = true;
-    requireSignIn(() => void navigate({ to: "/cart" }));
-  }, [account, navigate, requireSignIn]);
 
   if (!account) {
     return (
-      <section
-        role="status"
-        className="flex min-h-[60vh] items-center justify-center px-6 text-center"
-      >
-        <p className="text-sm text-stone">Please sign in to view your shopping bag.</p>
-      </section>
+      <EmptyState
+        title="Your Bag is Empty"
+        copy="Discover the latest pieces from the Milan atelier."
+      />
     );
   }
 
   if (error) {
     return (
-      <section role="alert" className="flex min-h-[60vh] items-center justify-center px-6 text-center">
+      <section
+        role="alert"
+        className="flex min-h-[60vh] items-center justify-center px-6 text-center"
+      >
         <p className="text-sm text-stone">
           {error instanceof Error ? error.message : "Unable to load your shopping bag."}
         </p>
@@ -55,11 +51,7 @@ function Cart() {
     );
   }
   if (isLoading) {
-    return (
-      <section role="status" className="flex min-h-[60vh] items-center justify-center px-6 text-center">
-        <p className="text-sm text-stone">Loading your shopping bag…</p>
-      </section>
-    );
+    return <PiecesLoading label="Loading your shopping bag" className="min-h-[60vh] px-6" />;
   }
 
   if (!lines.length) {

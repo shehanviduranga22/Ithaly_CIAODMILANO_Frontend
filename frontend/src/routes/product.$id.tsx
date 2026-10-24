@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { PiecesLoading } from "@/components/pieces-loading";
 import { ProductCard, useCommerce } from "@/components/storefront";
 import { money, products, type Product } from "@/lib/catalog";
 import { mixCatalogProducts, useCatalogItems, useProductsByIds } from "@/lib/catalog-api";
@@ -58,19 +59,21 @@ function ProductPage() {
   const recommendationsLoading = men.isLoading || women.isLoading || accessories.isLoading;
   const recommendationsError = men.error ?? women.error ?? accessories.error;
 
+  if (!product && isLoading && !error) {
+    return <PiecesLoading label="Loading product details" className="min-h-[60vh] px-6" />;
+  }
+
   if (!product) {
     return (
       <section className="flex min-h-[60vh] items-center justify-center px-6 text-center">
         <div>
           <h1 className="font-serif text-5xl">
-            {error ? "Product Unavailable" : isLoading ? "Loading Piece" : "Piece Not Found"}
+            {error ? "Product Unavailable" : "Piece Not Found"}
           </h1>
           <p role={error ? "alert" : "status"} className="mt-4 text-sm text-stone">
             {error instanceof Error
               ? error.message
-              : isLoading
-                ? "Loading product details…"
-                : "This piece is no longer available."}
+              : "This piece is no longer available."}
           </p>
         </div>
       </section>
@@ -206,9 +209,7 @@ function ProductPage() {
       <section className="mx-auto max-w-[1440px] px-4 pb-24 sm:px-6 lg:px-10">
         <h2 className="mb-10 font-serif text-4xl">You May Also Like</h2>
         {recommendationsLoading && (
-          <p role="status" className="mb-5 text-sm text-stone">
-            Finding similar pieces…
-          </p>
+          <PiecesLoading label="Finding similar pieces" compact className="mb-5" />
         )}
         {recommendationsError instanceof Error && (
           <p role="alert" className="mb-5 text-sm text-destructive">
