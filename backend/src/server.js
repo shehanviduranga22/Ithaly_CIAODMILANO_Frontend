@@ -6,7 +6,7 @@ import { MongoClient, ObjectId } from "mongodb";
 const scrypt = promisify(scryptCallback);
 const port = Number(process.env.PORT ?? 3001);
 const frontendOrigins = new Set(
-  (process.env.FRONTEND_ORIGIN ?? "http://localhost:8080")
+  (process.env.FRONTEND_ORIGIN ?? "https://ithaly-ciaodmilano-frontend-fronten.vercel.app")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),

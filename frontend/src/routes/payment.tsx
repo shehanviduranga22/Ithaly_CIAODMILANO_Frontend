@@ -78,7 +78,8 @@ function Payment() {
     setIsPaying(true);
     setPaymentError("");
     try {
-      const apiBaseUrl = import.meta.env["VITE_API_URL"] ?? "http://localhost:3001";
+      const apiBaseUrl =
+        import.meta.env["VITE_API_URL"] ?? "https://ithaly-ciaodmilano-frontend.vercel.app";
       const response = await fetch(`${apiBaseUrl.replace(/\/$/, "")}/api/account/orders`, {
         method: "POST",
         headers: {

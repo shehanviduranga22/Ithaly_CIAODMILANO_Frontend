@@ -21,7 +21,8 @@ function isPaginatedCatalogItems(result: unknown): result is PaginatedCatalogIte
   );
 }
 
-const apiBaseUrl = import.meta.env["VITE_API_URL"] ?? "http://localhost:3001";
+const apiBaseUrl =
+  import.meta.env["VITE_API_URL"] ?? "https://ithaly-ciaodmilano-frontend.vercel.app";
 
 async function readProducts(response: Response): Promise<Product[]> {
   const result = (await response.json()) as Product[] | { message?: string };

@@ -452,7 +452,8 @@ function Account() {
     setIsSubmitting(true);
     setMessage("");
     try {
-      const apiBaseUrl = import.meta.env["VITE_API_URL"] ?? "http://localhost:3001";
+      const apiBaseUrl =
+        import.meta.env["VITE_API_URL"] ?? "https://ithaly-ciaodmilano-frontend.vercel.app";
       const response = await fetch(
         `${apiBaseUrl.replace(/\/$/, "")}/api/account/${isRegister ? "register" : "login"}`,
         {
